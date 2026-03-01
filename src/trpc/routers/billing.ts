@@ -1,14 +1,19 @@
 import { TRPCError } from "@trpc/server";
 import { polar } from "@/lib/polar";
 import { env } from "@/lib/env";
+import { isBillingEnabled } from "@/lib/runtime-flags";
 import { createTRPCRouter, orgProcedure } from "../init";
 
 export const billingRouter = createTRPCRouter({
   createCheckout: orgProcedure.mutation(async ({ ctx }) => {
+    if (!isBillingEnabled) {
+      return { checkoutUrl: `${env.APP_URL}/settings?billing=disabled` };
+    }
+
     const result = await polar.checkouts.create({
       products: [env.POLAR_PRODUCT_ID],
       externalCustomerId: ctx.orgId,
-      successUrl: process.env.APP_URL,
+      successUrl: env.APP_URL,
     });
 
     if (!result.url) {
@@ -22,6 +27,10 @@ export const billingRouter = createTRPCRouter({
   }),
 
   createPortalSession: orgProcedure.mutation(async ({ ctx }) => {
+    if (!isBillingEnabled) {
+      return { portalUrl: `${env.APP_URL}/settings?billing=disabled` };
+    }
+
     const result = await polar.customerSessions.create({
       externalCustomerId: ctx.orgId,
     });
@@ -37,6 +46,14 @@ export const billingRouter = createTRPCRouter({
   }),
 
   getStatus: orgProcedure.query(async ({ ctx }) => {
+    if (!isBillingEnabled) {
+      return {
+        hasActiveSubscription: true,
+        customerId: "selfhost-billing-disabled",
+        estimatedCostCents: 0,
+      };
+    }
+
     try {
       const customerState = await polar.customers.getStateExternal({
         externalId: ctx.orgId,

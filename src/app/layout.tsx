@@ -19,30 +19,39 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: "Resonance",
-    template: "%s | Resonance"
+    template: "%s | Resonance",
   },
   description: "AI-powered text-to-speech and voice cloning platform",
 };
+
+const selfHostMode =
+  process.env.SELFHOST_MODE === "true" || process.env.DISABLE_AUTH === "true";
+
+function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <TRPCReactProvider>
+      <html lang="en">
+        <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
+          <NuqsAdapter>{children}</NuqsAdapter>
+          <Toaster />
+        </body>
+      </html>
+    </TRPCReactProvider>
+  );
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  if (selfHostMode) {
+    return <AppShell>{children}</AppShell>;
+  }
+
   return (
     <ClerkProvider>
-      <TRPCReactProvider>
-        <html lang="en">
-          <body
-            className={`${inter.variable} ${geistMono.variable} antialiased`}
-          >
-            <NuqsAdapter>
-              {children}
-            </NuqsAdapter>
-            <Toaster />
-          </body>
-        </html>
-      </TRPCReactProvider>
+      <AppShell>{children}</AppShell>
     </ClerkProvider>
   );
 }

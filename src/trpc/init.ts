@@ -1,14 +1,31 @@
 import * as Sentry from "@sentry/node";
-import { auth } from '@clerk/nextjs/server';
-import { initTRPC, TRPCError } from '@trpc/server';
-import { cache } from 'react';
+import { auth } from "@clerk/nextjs/server";
+import { initTRPC, TRPCError } from "@trpc/server";
+import { cache } from "react";
 import superjson from "superjson";
+import { isAuthEnforced, isSelfHostMode } from "@/lib/runtime-flags";
+
+const SELFHOST_DEFAULT_USER_ID = "selfhost-user";
+const SELFHOST_DEFAULT_ORG_ID = "selfhost-org";
+
+async function getAuthContext() {
+  if (!isAuthEnforced || isSelfHostMode) {
+    return {
+      userId: SELFHOST_DEFAULT_USER_ID,
+      orgId: SELFHOST_DEFAULT_ORG_ID,
+    };
+  }
+
+  return auth();
+}
+
 export const createTRPCContext = cache(async () => {
   /**
    * @see: https://trpc.io/docs/server/context
    */
   return {};
 });
+
 // Avoid exporting the entire t-object
 // since it's not very descriptive.
 // For instance, the use of a t variable
@@ -33,7 +50,7 @@ export const baseProcedure = t.procedure.use(sentryMiddleware);
 
 // Authenticated procedure - calls auth() only when needed
 export const authProcedure = baseProcedure.use(async ({ next }) => {
-  const { userId } = await auth();
+  const { userId } = await getAuthContext();
 
   if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -46,7 +63,7 @@ export const authProcedure = baseProcedure.use(async ({ next }) => {
 
 // Organization procedure - requires userId and orgId
 export const orgProcedure = baseProcedure.use(async ({ next }) => {
-  const { userId, orgId } = await auth();
+  const { userId, orgId } = await getAuthContext();
 
   if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });

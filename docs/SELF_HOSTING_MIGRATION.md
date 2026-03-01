@@ -148,3 +148,30 @@ Scoring scale: 1 (low) to 5 (high).
    - auth/org guard behavior.
 
 This sequencing de-risks migration by stabilizing interfaces before replacing high-lock components.
+
+---
+
+## 6) Current baseline bring-up runbook (app + Postgres)
+
+```bash
+cp .env.selfhost.example .env.selfhost
+docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost up -d --build
+```
+
+What happens during startup:
+- `postgres` starts with healthcheck.
+- `app` waits for Postgres TCP readiness.
+- `app` runs `npx prisma migrate deploy`.
+- `app` starts Next.js dev server on `0.0.0.0:3000`.
+
+Validation commands:
+
+```bash
+docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost ps
+curl -i http://localhost:3000/
+```
+
+Expected baseline result:
+- `postgres` service is `running (healthy)`
+- `app` service is `running`
+- local HTTP endpoint responds (200 on `/` in self-host mode)

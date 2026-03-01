@@ -20,15 +20,24 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Self-hosting (work in progress)
+## Self-hosting (baseline app + Postgres)
 
 See [`docs/SELF_HOSTING_MIGRATION.md`](docs/SELF_HOSTING_MIGRATION.md) for the cloud dependency inventory, replacement matrix, and phased migration plan.
 
-Quick start (skeleton stack):
+Quick start baseline:
 
 ```bash
 cp .env.selfhost.example .env.selfhost
-docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost up --build
+docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost up -d --build
+```
+
+The app container waits for Postgres, runs Prisma migrations (`prisma migrate deploy`), and then starts Next.js on port `3000`.
+
+Validate:
+
+```bash
+docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost ps
+curl -i http://localhost:3000/
 ```
 
 ## Learn More
