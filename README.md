@@ -20,6 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Self-hosting (work in progress)
+
+See [`docs/SELF_HOSTING_MIGRATION.md`](docs/SELF_HOSTING_MIGRATION.md) for the cloud dependency inventory, replacement matrix, and phased migration plan.
+
+Quick start (skeleton stack):
+
+```bash
+cp .env.selfhost.example .env.selfhost
+docker compose -f docker-compose.selfhost.yml --env-file .env.selfhost up --build
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
