@@ -20,6 +20,8 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: z.string().default("selfhost-local"),
     R2_SECRET_ACCESS_KEY: z.string().default("selfhost-local"),
     R2_BUCKET_NAME: z.string().default("resonance-audio"),
+    S3_ENDPOINT: optionalNonEmptyString,
+    S3_FORCE_PATH_STYLE: z.coerce.boolean().default(false),
 
     CHATTERBOX_API_URL: z.string().url().default("http://localhost:8000"),
     CHATTERBOX_API_KEY: z.string().default("selfhost-local"),

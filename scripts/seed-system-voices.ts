@@ -29,6 +29,8 @@ const envSchema = z.object({
   R2_ACCESS_KEY_ID: z.string().min(1),
   R2_SECRET_ACCESS_KEY: z.string().min(1),
   R2_BUCKET_NAME: z.string().min(1),
+  S3_ENDPOINT: z.string().url().optional(),
+  S3_FORCE_PATH_STYLE: z.coerce.boolean().default(false),
 });
 
 const env = envSchema.parse(process.env);
@@ -36,9 +38,14 @@ const env = envSchema.parse(process.env);
 const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+const endpoint =
+  env.S3_ENDPOINT ||
+  `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+
 const r2 = new S3Client({
   region: "auto",
-  endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  endpoint,
+  forcePathStyle: env.S3_FORCE_PATH_STYLE,
   credentials: {
     accessKeyId: env.R2_ACCESS_KEY_ID,
     secretAccessKey: env.R2_SECRET_ACCESS_KEY,

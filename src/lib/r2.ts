@@ -7,9 +7,14 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "./env";
 
+const s3Endpoint =
+  env.S3_ENDPOINT ||
+  `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+
 const r2 = new S3Client({
   region: "auto",
-  endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  endpoint: s3Endpoint,
+  forcePathStyle: env.S3_FORCE_PATH_STYLE,
   credentials: {
     accessKeyId: env.R2_ACCESS_KEY_ID,
     secretAccessKey: env.R2_SECRET_ACCESS_KEY,

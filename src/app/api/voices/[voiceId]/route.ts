@@ -1,12 +1,27 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 import { getSignedAudioUrl } from "@/lib/r2";
+import { isAuthEnforced, isSelfHostMode } from "@/lib/runtime-flags";
+
+const SELFHOST_DEFAULT_USER_ID = "selfhost-user";
+const SELFHOST_DEFAULT_ORG_ID = "selfhost-org";
+
+async function getAuthContext() {
+  if (!isAuthEnforced || isSelfHostMode) {
+    return {
+      userId: SELFHOST_DEFAULT_USER_ID,
+      orgId: SELFHOST_DEFAULT_ORG_ID,
+    };
+  }
+
+  return auth();
+}
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ voiceId: string }> },
 ) {
-  const { userId, orgId } = await auth();
+  const { userId, orgId } = await getAuthContext();
 
   if (!userId || !orgId) {
     return new Response("Unauthorized", { status: 401 });
