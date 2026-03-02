@@ -18,7 +18,7 @@ async function getAuthContext() {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ generationId: string }> },
 ) {
   const { userId, orgId } = await getAuthContext();
@@ -42,16 +42,30 @@ export async function GET(
   }
 
   const signedUrl = await getSignedAudioUrl(generation.r2ObjectKey);
-  const audioResponse = await fetch(signedUrl);
+  const range = request.headers.get("range");
 
-  if (!audioResponse.ok) {
+  const audioResponse = await fetch(signedUrl, {
+    headers: range ? { Range: range } : undefined,
+  });
+
+  if (!audioResponse.ok && audioResponse.status !== 206) {
     return new Response("Failed to fetch audio", { status: 502 });
   }
 
+  const contentType =
+    audioResponse.headers.get("content-type") || "audio/wav";
+  const contentLength = audioResponse.headers.get("content-length");
+  const acceptRanges = audioResponse.headers.get("accept-ranges");
+  const contentRange = audioResponse.headers.get("content-range");
+
   return new Response(audioResponse.body, {
+    status: audioResponse.status,
     headers: {
-      "Content-Type": "audio/wav",
+      "Content-Type": contentType,
       "Cache-Control": "private, max-age=3600",
+      ...(contentLength ? { "Content-Length": contentLength } : {}),
+      ...(acceptRanges ? { "Accept-Ranges": acceptRanges } : {}),
+      ...(contentRange ? { "Content-Range": contentRange } : {}),
     },
   });
 };

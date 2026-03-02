@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { Pause, Play, Download } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { VoiceAvatar } from "@/components/voice-avatar/voice-avatar";
@@ -56,14 +57,27 @@ export function VoicePreviewMobile({
     }
   }, [isMobile]);
 
-  const togglePlayPause = () => {
+  const togglePlayPause = async () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (isPlaying) {
       audio.pause();
-    } else {
-      audio.play();
+      return;
+    }
+
+    try {
+      await audio.play();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Audio playback is not supported on this device/browser.";
+
+      toast.error("Unable to play audio", {
+        description: message,
+      });
+      setIsPlaying(false);
     }
   };
 
@@ -88,7 +102,14 @@ export function VoicePreviewMobile({
 
   return (
     <div className="border-t lg:hidden p-4">
-      <audio ref={audioRef} src={audioUrl} />
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        onError={() => {
+          toast.error("Unable to load audio preview on this device.");
+          setIsPlaying(false);
+        }}
+      />
       <div className="grid grid-cols-[1fr_auto] items-center gap-4">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{text}</p>

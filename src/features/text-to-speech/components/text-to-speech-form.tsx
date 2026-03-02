@@ -66,7 +66,9 @@ export function TextToSpeechForm({
           repetitionPenalty: value.repetitionPenalty,
         });
 
-        toast.success("Audio generated successfully!");
+        toast.success("Audio generated successfully!", {
+          duration: 1200,
+        });
         router.push(`/text-to-speech/${data.id}`);
       } catch (error) {
         const message =
